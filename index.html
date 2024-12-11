@@ -37,6 +37,8 @@
                 width: 100%;
                 position: absolute;
                 transition: 300ms;
+                overflow: hidden;
+                cursor: pointer;
             }
             .list-item {
                 position: relative;
@@ -122,12 +124,15 @@
         <script>
             const list = document.getElementById("list");
             const listItems = list.querySelectorAll(".list-item");
+
             const windowWidth = 5;
-            let activeIndex = 0;
+            let activeIndex = 2;
+            activeIndex = activeIndex % listItems.length;
 
             let visibleWindow = {
-                startIndex: activeIndex,
-                endIndex: activeIndex + windowWidth,
+                startIndex:
+                    activeIndex > windowWidth ? activeIndex - windowWidth : 0,
+                endIndex: activeIndex > windowWidth ? activeIndex : windowWidth,
             };
 
             const classNames = {
@@ -203,6 +208,30 @@
             };
             updateActiveClass();
 
+            const changeActiveIndex = (index) => {
+                activeIndex = index % listItems.length;
+
+                if (visibleWindowWillChange()) {
+                    visibleWindow = {
+                        startIndex:
+                            activeIndex < visibleWindow.startIndex
+                                ? activeIndex
+                                : activeIndex > visibleWindow.endIndex
+                                ? activeIndex - windowWidth
+                                : visibleWindow.startIndex,
+
+                        endIndex:
+                            activeIndex > visibleWindow.endIndex
+                                ? activeIndex
+                                : activeIndex < visibleWindow.startIndex
+                                ? activeIndex + windowWidth
+                                : visibleWindow.endIndex,
+                    };
+                    updateOtherClasses();
+                }
+                updateActiveClass();
+            };
+
             const moveForward = () => {
                 if (activeIndex < listItems.length - 1) {
                     activeIndex++;
@@ -233,6 +262,13 @@
                     updateActiveClass();
                 }
             };
+            listItems.forEach((listItem, i) => {
+                const btn = listItem.querySelector(".btn");
+                // btn.innerHTML = i;
+                btn.addEventListener("click", () => {
+                    changeActiveIndex(i);
+                });
+            });
 
             window.addEventListener("keydown", (e) => {
                 switch (e.keyCode) {
