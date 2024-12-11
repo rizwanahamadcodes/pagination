@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+        <style>
+            * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
+            .container {
+                width: 80%;
+                margin: 0 auto;
+            }
+            .pagination-section .container {
+                display: flex;
+                justify-content: center;
+            }
+            .pagination-section {
+                padding: 3rem 0;
+            }
+            .list {
+                list-style-type: none;
+                display: flex;
+                align-items: center;
+                height: 100px;
+                gap: 0.25rem;
+            }
+
+            .btn {
+                border: none;
+                border-radius: 100%;
+                background-color: lightgray;
+                height: 100%;
+                width: 100%;
+                position: absolute;
+                transition: 300ms;
+            }
+            .list-item {
+                position: relative;
+                display: none;
+                transition: 300ms;
+            }
+            .list-item.small {
+                display: block;
+                height: 4px;
+                width: 4px;
+            }
+            .list-item.small.medium {
+                height: 8px;
+                width: 8px;
+            }
+            .list-item.small.medium.large {
+                height: 16px;
+                width: 16px;
+            }
+            .list-item.active .btn {
+                background-color: deepskyblue;
+            }
+        </style>
+    </head>
+    <body>
+        <section class="pagination-section">
+            <div class="container">
+                <ul class="list" id="list">
+                    <li class="list-item small medium large active">
+                        <button class="btn"></button>
+                    </li>
+                    <li class="list-item small medium large">
+                        <button class="btn"></button>
+                    </li>
+                    <li class="list-item small medium large">
+                        <button class="btn"></button>
+                    </li>
+                    <li class="list-item small medium large">
+                        <button class="btn"></button>
+                    </li>
+                    <li class="list-item small medium large">
+                        <button class="btn"></button>
+                    </li>
+                    <li class="list-item small medium">
+                        <button class="btn"></button>
+                    </li>
+                    <li class="list-item small">
+                        <button class="btn"></button>
+                    </li>
+                    <li class="list-item">
+                        <button class="btn"></button>
+                    </li>
+                    <li class="list-item">
+                        <button class="btn"></button>
+                    </li>
+                    <li class="list-item">
+                        <button class="btn"></button>
+                    </li>
+                    <li class="list-item">
+                        <button class="btn"></button>
+                    </li>
+                    <li class="list-item">
+                        <button class="btn"></button>
+                    </li>
+                    <li class="list-item">
+                        <button class="btn"></button>
+                    </li>
+                    <li class="list-item">
+                        <button class="btn"></button>
+                    </li>
+                    <li class="list-item">
+                        <button class="btn"></button>
+                    </li>
+                    <li class="list-item">
+                        <button class="btn"></button>
+                    </li>
+                </ul>
+            </div>
+        </section>
+
+        <script>
+            const list = document.getElementById("list");
+            const listItems = list.querySelectorAll(".list-item");
+            const noOfLargeDots = 3;
+            let activeIndex = 0;
+            const classNames = {
+                small: "small",
+                medium: "medium",
+                large: "large",
+                active: "active",
+            };
+
+            const addActiveClassToActiveIndexItem = () => {
+                addClassNameIfListItemExistsAtIndex(
+                    classNames.active,
+                    activeIndex
+                );
+            };
+
+            const addClassNameIfListItemExistsAtIndex = (className, index) => {
+                const listItem = listItems[index];
+                if (listItem) {
+                    listItem.classList.add(className);
+                }
+            };
+
+            const removeClassNameIfListItemExistsAtIndex = (
+                className,
+                index
+            ) => {
+                const listItem = listItems[index];
+                if (listItem) {
+                    listItem.classList.remove(className);
+                }
+            };
+
+            const removeClassesFromAllListItems = (...classNames) => {
+                listItems.forEach((listItem) => {
+                    listItem.classList.remove(...classNames);
+                });
+            };
+
+            const initialSetup = () => {
+                removeClassesFromAllListItems(...Object.values(classNames));
+                for (let i = 0; i < noOfLargeDots + 3; i++) {
+                    const listItem = listItems[i];
+                    if (listItem) {
+                        if (i < noOfLargeDots + 2) {
+                            listItem.classList.add(classNames.small);
+                        }
+                        if (i < noOfLargeDots + 1) {
+                            listItem.classList.add(classNames.medium);
+                        }
+                        if (i < noOfLargeDots) {
+                            listItem.classList.add(classNames.large);
+                        }
+                    }
+                }
+                addActiveClassToActiveIndexItem();
+            };
+            initialSetup();
+
+            const addClassMap = [
+                { className: classNames.large, offset: 0 },
+                { className: classNames.medium, offset: 1 },
+                { className: classNames.small, offset: 2 },
+            ];
+
+            const removeClassMap = [
+                { className: classNames.large, offset: noOfLargeDots },
+                { className: classNames.medium, offset: noOfLargeDots + 1 },
+                { className: classNames.small, offset: noOfLargeDots + 2 },
+            ];
+
+            const move = (vector) => {
+                const direction = vector <= 0 ? -1 : 1;
+                const newIndex = activeIndex + direction;
+
+                if (listItems[newIndex]) {
+                    activeIndex = newIndex;
+
+                    addClassMap.forEach(({ className, offset }) =>
+                        addClassNameIfListItemExistsAtIndex(
+                            className,
+                            activeIndex + offset * direction
+                        )
+                    );
+                    removeClassMap.forEach(({ className, offset }) =>
+                        removeClassNameIfListItemExistsAtIndex(
+                            className,
+                            activeIndex - offset * direction
+                        )
+                    );
+
+                    removeClassesFromAllListItems(classNames.active);
+                    addActiveClassToActiveIndexItem();
+                }
+            };
+
+            window.addEventListener("keydown", (e) => {
+                switch (e.keyCode) {
+                    case 37:
+                        move(-1);
+                        break;
+                    case 39:
+                        move(1);
+                        break;
+                }
+            });
+        </script>
+    </body>
+</html>
