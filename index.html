@@ -48,11 +48,13 @@
                 height: 4px;
                 width: 4px;
             }
-            .list-item.small.medium {
+            .list-item.medium {
+                display: block;
                 height: 8px;
                 width: 8px;
             }
-            .list-item.small.medium.large {
+            .list-item.large {
+                display: block;
                 height: 16px;
                 width: 16px;
             }
@@ -120,8 +122,14 @@
         <script>
             const list = document.getElementById("list");
             const listItems = list.querySelectorAll(".list-item");
-            const noOfLargeDots = 3;
+            const windowWidth = 5;
             let activeIndex = 0;
+
+            let visibleWindow = {
+                startIndex: activeIndex,
+                endIndex: activeIndex + windowWidth,
+            };
+
             const classNames = {
                 small: "small",
                 medium: "medium",
@@ -129,10 +137,10 @@
                 active: "active",
             };
 
-            const addActiveClassToActiveIndexItem = () => {
-                addClassNameIfListItemExistsAtIndex(
-                    classNames.active,
-                    activeIndex
+            const visibleWindowWillChange = () => {
+                return (
+                    activeIndex < visibleWindow.startIndex ||
+                    activeIndex > visibleWindow.endIndex
                 );
             };
 
@@ -143,14 +151,11 @@
                 }
             };
 
-            const removeClassNameIfListItemExistsAtIndex = (
-                className,
-                index
-            ) => {
-                const listItem = listItems[index];
-                if (listItem) {
-                    listItem.classList.remove(className);
-                }
+            const addActiveClassToActiveIndexItem = () => {
+                addClassNameIfListItemExistsAtIndex(
+                    classNames.active,
+                    activeIndex
+                );
             };
 
             const removeClassesFromAllListItems = (...classNames) => {
@@ -159,70 +164,83 @@
                 });
             };
 
-            const initialSetup = () => {
-                removeClassesFromAllListItems(...Object.values(classNames));
-                for (let i = 0; i < noOfLargeDots + 3; i++) {
-                    const listItem = listItems[i];
-                    if (listItem) {
-                        if (i < noOfLargeDots + 2) {
-                            listItem.classList.add(classNames.small);
-                        }
-                        if (i < noOfLargeDots + 1) {
-                            listItem.classList.add(classNames.medium);
-                        }
-                        if (i < noOfLargeDots) {
-                            listItem.classList.add(classNames.large);
-                        }
+            const updateOtherClasses = () => {
+                const { active, ...otherClasses } = classNames;
+
+                removeClassesFromAllListItems(...Object.values(otherClasses));
+                listItems.forEach((listItem, i) => {
+                    if (
+                        i >= visibleWindow.startIndex &&
+                        i <= visibleWindow.endIndex
+                    ) {
+                        addClassNameIfListItemExistsAtIndex(
+                            classNames.large,
+                            i
+                        );
+                    } else if (
+                        i == visibleWindow.startIndex - 1 ||
+                        i == visibleWindow.endIndex + 1
+                    ) {
+                        addClassNameIfListItemExistsAtIndex(
+                            classNames.medium,
+                            i
+                        );
+                    } else if (
+                        i == visibleWindow.startIndex - 2 ||
+                        i == visibleWindow.endIndex + 2
+                    ) {
+                        addClassNameIfListItemExistsAtIndex(
+                            classNames.small,
+                            i
+                        );
                     }
-                }
+                });
+            };
+            updateOtherClasses();
+            const updateActiveClass = () => {
+                removeClassesFromAllListItems(classNames.active);
                 addActiveClassToActiveIndexItem();
             };
-            initialSetup();
+            updateActiveClass();
 
-            const addClassMap = [
-                { className: classNames.large, offset: 0 },
-                { className: classNames.medium, offset: 1 },
-                { className: classNames.small, offset: 2 },
-            ];
+            const moveForward = () => {
+                if (activeIndex < listItems.length - 1) {
+                    activeIndex++;
 
-            const removeClassMap = [
-                { className: classNames.large, offset: noOfLargeDots },
-                { className: classNames.medium, offset: noOfLargeDots + 1 },
-                { className: classNames.small, offset: noOfLargeDots + 2 },
-            ];
+                    if (visibleWindowWillChange()) {
+                        visibleWindow = {
+                            startIndex: visibleWindow.startIndex + 1,
+                            endIndex: visibleWindow.endIndex + 1,
+                        };
 
-            const move = (vector) => {
-                const direction = vector <= 0 ? -1 : 1;
-                const newIndex = activeIndex + direction;
+                        updateOtherClasses();
+                    }
+                    updateActiveClass();
+                }
+            };
 
-                if (listItems[newIndex]) {
-                    activeIndex = newIndex;
+            const moveBackward = () => {
+                if (activeIndex > 0) {
+                    activeIndex--;
 
-                    addClassMap.forEach(({ className, offset }) =>
-                        addClassNameIfListItemExistsAtIndex(
-                            className,
-                            activeIndex + offset * direction
-                        )
-                    );
-                    removeClassMap.forEach(({ className, offset }) =>
-                        removeClassNameIfListItemExistsAtIndex(
-                            className,
-                            activeIndex - offset * direction
-                        )
-                    );
-
-                    removeClassesFromAllListItems(classNames.active);
-                    addActiveClassToActiveIndexItem();
+                    if (visibleWindowWillChange()) {
+                        visibleWindow = {
+                            startIndex: visibleWindow.startIndex - 1,
+                            endIndex: visibleWindow.endIndex - 1,
+                        };
+                        updateOtherClasses();
+                    }
+                    updateActiveClass();
                 }
             };
 
             window.addEventListener("keydown", (e) => {
                 switch (e.keyCode) {
                     case 37:
-                        move(-1);
+                        moveBackward();
                         break;
                     case 39:
-                        move(1);
+                        moveForward();
                         break;
                 }
             });
